@@ -7,15 +7,21 @@ use Illuminate\Http\Request;
 use \App\Models\Series;
 use \App\Http\Requests\SeriesFormRequest;
 use App\Repositories\EloquentSeriesRepository;
+use \Illuminate\Contracts\Auth\Authenticatable;
 
 class SeriesController extends Controller
 {
     public function __construct(private EloquentSeriesRepository $seriesRepository)
     { }
 
-    public function index()
+    public function index(Request $request)
     {
-        return Series::all();
+        $query = Series::query();
+
+        if($request->has('nome'))
+            $query->whereNome($request->nome);
+        
+        return $query->paginate(5);
     }
 
     public function store(SeriesFormRequest $request)
@@ -44,8 +50,10 @@ class SeriesController extends Controller
         return $series;
     }
 
-    public function destroy(int $series)
+    public function destroy(int $series, Authenticatable $user)
     {
+        // dd($user->tokenCan('series:delete')); // true
+        // dd($user->tokenCan('series:delete')); // false
         Series::destroy($series);
         return response()->json(['msg' => 'Série apagada com sucesso'], 204);   
     }
